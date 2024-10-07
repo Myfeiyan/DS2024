@@ -64,32 +64,32 @@ void print(Complex &c)   //输出函数
 // 随机生成乱序复数向量
 Vector<Complex> generateRandomVector(int n)
 {
-    Vector<Complex> A;
+    Vector<Complex> M;
     srand(time(0));
     int uniqueSize = n - 2;
-    Vector<Complex> A1;
+    Vector<Complex> M1;
     for (int i = 0; i < uniqueSize; ++i)
     {
          double real = (rand() % 200 - 100) / 10.0; // 实部在 -10 到 10 之间
          double imag = (rand() % 200 - 100) / 10.0; // 虚部在 -10 到 10 之间
-        A1.insert(Complex(real, imag));
-        A.insert(Complex(real, imag)); // 插入到最终的向量中
+        M1.insert(Complex(real, imag));
+        M.insert(Complex(real, imag)); // 插入到最终的向量中
     }
     for (int i = uniqueSize; i < n; ++i)
     {
         int randomIndex = rand() % uniqueSize; // 从唯一元素中随机选择
-        A.insert(A1[randomIndex]);
+        M.insert(M1[randomIndex]);
     }
-    return A;
+    return M;
 }
 // 记录排序时间并输出结果
-void measureSortingTime(const string &sortType, Vector<Complex> A)
+void measureSortingTime(const string &sortType, Vector<Complex> M)
 {
     auto start = chrono::high_resolution_clock::now();
     if (sortType == "起泡排序")
-    { A.bubbleSort(0, A.size()-1);}
+    { M.bubbleSort(0, M.size()-1);}
     else if (sortType == "归并排序")
-    {A.mergeSort(0, A.size()-1);}
+    {M.mergeSort(0, M.size()-1);}
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, micro> duration_us = end - start;
     cout << sortType<<" time: " << duration_us.count() << " us" << endl;
@@ -97,13 +97,13 @@ void measureSortingTime(const string &sortType, Vector<Complex> A)
 
 int main()
 {
-    // 1. 生成一个无序的复数向量
+    // 生成一个无序的复数向量
     int n = 1000;
-    Vector<Complex> A= generateRandomVector(n);
-    Vector<Complex> A1 = A;//乱序数组A1
-    Vector<Complex> A2 = A;
-    Vector<Complex> A3 = A; // 逆序数组A3
-    A2.sort();//顺序数组A2
+    Vector<Complex> M= generateRandomVector(n);
+    Vector<Complex> M1 = M;
+    Vector<Complex> M2 = M;
+    Vector<Complex> M3 = M; 
+    M2.sort();
     
    std::vector<Complex> generateRandomComplexVector(int n) {
     std::vector<Complex> vec;
@@ -117,53 +117,53 @@ int main()
 }
     
     // 测试置乱
-    A.unsort(0, A.size()-1);
+    M.unsort(0, M.size()-1);
     cout << "置乱后的复数向量:\n";
-    A.traverse(print);cout << endl;
+    M.traverse(print);cout << endl;
     // // 测试查找
     Complex search(1, 2); // 用以查找的复数
-    Rank foundI = A.find(search);
+    Rank foundI = M.find(search);
     if (foundI != -1)
     { cout << "找到元素 " << search << " 在索引 " << foundI << endl;}
     else
     {cout << "未找到元素 " << search << endl;}
     // 测试插入
-    A.insert(0, Complex(1, 2));
+    M.insert(0, Complex(1, 2));
     cout << "插入元素 (1, 2) 后的复数向量:\n";
-    A.traverse(print);cout << endl;
+    M.traverse(print);cout << endl;
     // 测试删除
-    A.remove(0); // 删除插入的元素
+    M.remove(0); // 删除插入的元素
     cout << "删除元素后复数向量:\n";
-    A.traverse(print);cout << endl;
+    M.traverse(print);cout << endl;
     // 唯一化复数向量
-    A.deduplicate();
+    M.deduplicate();
     cout << "唯一化后的复数向量:\n";
-    A.traverse(print);cout << endl;
+    M.traverse(print);cout << endl;
     // 排序
-    A.sort();
+    M.sort();
     cout << "排序后的复数向量:\n";
-    A.traverse(print);cout << endl;
+    M.traverse(print);cout << endl;
     // 测试区间查找
     double m1 = 3.0;  // 设置模的下界
     double m2 = 8.0; // 设置模的上界
-    Vector<Complex> foundN = findM(A2, m1, m2);
+    Vector<Complex> foundN = findM(M2, m1, m2);
     cout << "在区间 [" << m1 << ", " << m2 << "):的元素\n";
     foundN.traverse(print);cout<<endl;
     // 测试乱序向量
-    cout << "乱序排序时间:" << endl;
-    Vector<Complex> A12 = A1;
-    measureSortingTime("起泡排序",A1);
-    measureSortingTime("归并排序", A12);
+    cout << "乱序排序时间 " << endl;
+    Vector<Complex> M12 = M1;
+    measureSortingTime("起泡排序",M1);
+    measureSortingTime("归并排序", M12);
     // 测试顺序
-    cout << "顺序排序时间:" << endl;
-    Vector<Complex> A22 = A2;
-    measureSortingTime("起泡排序", A2);
-    measureSortingTime("归并排序", A22);
+    cout << "顺序排序时间 " << endl;
+    Vector<Complex> M22 = M2;
+    measureSortingTime("起泡排序", M2);
+    measureSortingTime("归并排序", M22);
     // 测试逆序向量
-    cout << "逆序排序时间" << endl;
-    Vector<Complex> A32 = A3;
-    measureSortingTime("起泡排序", A3);
-    measureSortingTime("归并排序", A32);
+    cout << "逆序排序时间 " << endl;
+    Vector<Complex> M32 = M3;
+    measureSortingTime("起泡排序", M3);
+    measureSortingTime("归并排序", M32);
     
     return 0;
  }
