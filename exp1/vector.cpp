@@ -1,6 +1,8 @@
-typedef int Rank;		   // 秩
-#define DEFAULT_CAPACITY 3 // 默认的初始容量（实际应用中可设置为更大）
+#include <algorithm> 
+#include <cstdlib>  
 
+typedef int Rank;		   // 秩
+#define DEFAULT_CAPACITY 3 // 默认的初始容量
 template <typename T>
 class Vector
 { // 向量模板类
@@ -64,17 +66,16 @@ public:
 	void traverse(VST &); // 遍历（使用函数对象，可全局性修改）
 }; // Vector
 
-// 2.2基于复制的向量构造器
+// 基于复制的向量构造器
 template <typename T> // 元素类型
 void Vector<T>::copyFrom(T const *A, Rank lo, Rank hi)
-{ // 以数组区间A【lo,hi】为蓝本复制向量
-	_elem = new T[_capacity = 2 * (hi - lo)];
+{	_elem = new T[_capacity = 2 * (hi - lo)];
 	_size = 0;					  // 分配空间，规模清零
-	while (lo < hi)				  // A【lo，hi】内的元素逐一
+	while (lo < hi)				  
 		_elem[_size++] = A[lo++]; // 复制至_elem[0,hi-lo]
 }
 
-// 2.3重载向量赋值操作符
+//重载向量赋值操作符
 template <typename T>
 Vector<T> &Vector<T>::operator=(Vector<T> const &V)
 { // 重载赋值操作符
@@ -84,7 +85,7 @@ Vector<T> &Vector<T>::operator=(Vector<T> const &V)
 	return *this;					// 返回当前对象的应用，以便链式赋值
 }
 
-// 2.4向量内部数组动态扩容算法expand()
+// 向量内部数组动态扩容算法expand()
 template <typename T>
 void Vector<T>::expand()
 { // 向量空间不足时扩容
@@ -99,7 +100,7 @@ void Vector<T>::expand()
 	delete[] oldElem;		   // 释放原空间
 }
 
-// 2.5向量内部功能shrink()
+// 向量内部功能shrink()
 template <typename T>
 void Vector<T>::shrink()
 { // 填装因子过小时压缩向量所占空间
@@ -114,14 +115,14 @@ void Vector<T>::shrink()
 	delete[] oldElem;		   // 释放原空间
 }
 
-// 2.6重载向量操作符[]
+// 重载向量操作符[]
 template <typename T>
 T &Vector<T>::operator[](Rank r) const // 重载下标操作符
 {
 	return _elem[r];
 } // assert:0<=r<-size
 
-// 2.7向量整体置乱算法permute()
+// 向量整体置乱算法permute()
 template <typename T>
 void permute(Vector<T> &V) // 随机置乱向量，使各元素等概率出现于每一位置
 {
@@ -129,7 +130,7 @@ void permute(Vector<T> &V) // 随机置乱向量，使各元素等概率出现�
 		swap(V[i - 1], V[rand() % i]); // v[i-1]与v[0,1]中某一随机元素交换
 }
 
-// 2.8向量区间置乱接口unsort()
+// 向量区间置乱接口unsort()
 template <typename T>
 void Vector<T>::unsort(Rank lo, Rank hi) // 等概率随机置乱向量区间[lo,hi]
 {
@@ -138,17 +139,17 @@ void Vector<T>::unsort(Rank lo, Rank hi) // 等概率随机置乱向量区间[lo
 		std::swap(V[i - 1], V[rand() % i]); // 将v[i-1]与v[0,i]中某一元素随机交换
 }
 
-// 2.9重载比较器以便比较对象指针
+// 重载比较器以便比较对象指针
 template <typename T>
 static bool lt(T *a, T *b) { return lt(*a, *b); } // less than
 template <typename T>
-static bool lt(T &a, T &b) { return a < b; } // less than
+static bool lt(T &a, T &b) { return a < b; } 
 template <typename T>
 static bool eq(T *a, T *b) { return eq(*a, *b); } // equal
 template <typename T>
-static bool eq(T &a, T &b) { return a == b; } // equal
+static bool eq(T &a, T &b) { return a == b; } 
 
-// 2.10无序向量元素查找接口find()
+// 无序向量元素查找接口find()
 template <typename T>									 // 无序向量的顺序查找：返回最后一个元素e的位置；失败是，返回lo-1
 Rank Vector<T>::find(T const &e, Rank lo, Rank hi) const // assert:0<=lo<hi<=_size
 {
@@ -157,7 +158,7 @@ Rank Vector<T>::find(T const &e, Rank lo, Rank hi) const // assert:0<=lo<hi<=_si
 	return hi; // 若hi<lo,则意味着失败，否则hi即命中元素的秩
 }
 
-// 2.11向量元素插入接口insert()
+// 向量元素插入接口insert()
 template <typename T>					   // 将e作为秩为rr元素插入
 Rank Vector<T>::insert(Rank r, T const &e) // assert:0<=r<=size
 {
@@ -167,7 +168,7 @@ Rank Vector<T>::insert(Rank r, T const &e) // assert:0<=r<=size
 	return r; // 返回秩
 }
 
-// 2.12向量区间删除接口remove(lo,hi)
+// 向量区间删除接口remove(lo,hi)
 template <typename T>
 int Vector<T>::remove(Rank lo, Rank hi) // 删除区间[lo,hi]
 {
@@ -176,33 +177,32 @@ int Vector<T>::remove(Rank lo, Rank hi) // 删除区间[lo,hi]
 	while (hi < _size)
 		_elem[lo++] = _elem[hi++]; //[hi,_size]顺次前移hi-lo个单元
 	_size = lo;					   // 更新规模，直接丢弃尾部[lo,_size=hi]区间
-	shrink();					   // 若有必要则缩容
+	shrink();					   
 	return hi - lo;				   // 返回被删除元素数目
 }
 
-// 2.13向量单元素删除接口remove()
+// 向量单元素删除接口remove()
 template <typename T>
-T Vector<T>::remove(Rank r) // 删除向量中秩为r的元素，0<=r<=size
-{
-	T e = _elem[r];	  // 备份被删除元素
-	remove(r, r + 1); // 调用区间删除算法，等效于对区间[r,r+1]的删除
-	return e;		  // 返回被删除元素
+T Vector<T>::remove(Rank r)
+{ // 默认插入到末尾
+    T e = _elem[r];
+    remove(r, r + 1); // 单元素删除
+    return e;         // 返回被删除的元素
 }
-
-// 2.14无序向量清除重复元素接口deduplicate()
+// 无序向量清除重复元素接口deduplicate()
 template <typename T>
-int Vector<T>::deduplicate() // 删除无序向量中重复元素(高效版)
+int Vector<T>::deduplicate() 
 {
-	int oldSize = _size;			 // 记录原规模
-	Rank i = 1;						 // 从_elem[1]开始
-	while (i < _size)				 // 自前向后逐一考查各元素_elem[i]
+	int oldSize = _size;			 
+	Rank i = 1;						
+	while (i < _size)				
 		(find(_elem[i], 0, i) < 0) ? // 在其后缀中寻找与其雷同者(至多一个)
 			i++
 								   : remove(i); // 若无雷同则继续考察后继，否则删除雷同者
-	return oldSize - _size;						// 向量规模变化量，即被删除元素总数
+	return oldSize - _size;						
 }
 
-// 2.15向量遍历接口traverse()
+// 向量遍历接口traverse()
 template <typename T>
 void Vector<T>::traverse(void (*visit)(T &)) // 利用函数指针机制遍历
 {
@@ -217,41 +217,35 @@ void Vector<T>::traverse(VST &visit) // 利用函数对象机制的遍历
 		visit(_elem[i]);
 }
 
-// 2.16基于遍历实现increase()功能
-template <typename T>
-struct Increase // 函数对象：递增一个T类对象
-{
-	virtual void operator()(T &e) { e++; } // 架设T可直接递增或已重载++
-};
-template <typename T>
-void increase(Vector<T> &V) // 统一递增向量中的各元素
-{
-	V.traverse(Increase<T>());
-} // 以Increase<T>()为基本操作进行遍历
 
-// 2.17有序向量甄别算法disordered()
+
+//基于遍历实现increase()功能
+template <typename T>
+struct Increase
+{
+    virtual void operator()(T &e) const { ++e; }
+}; // 重载Increase的（），为++；
+
+template <typename T>
+void increase(Vector<T> &V)
+{
+    Increase<T> increaser;
+    V.traverse(increaser); // 调用traverse，遍历所有元素，调用重载的（）
+}
+
+
+
+// 有序向量甄别算法disordered()
 template <typename T>
 int Vector<T>::disordered() const
-{									// 返回向量中逆序相邻元素对的总数
-	int n = 0;						// 计数器
-	for (int i = 1; i < _size; i++) // 注意检查
+{									
+	int n = 0;						
+	for (int i = 1; i < _size; i++)
 		if (_elem[i - 1] > _elem[1])
-			n++; // 逆序则计数
+			n++; 
 	return n;	 // 向量有序当且仅当n=0
 }
 
-//  2.18有序向量uniquify()接口的平凡实现
-// template <typename T>
-// int Vector<T>::uniquify()
-// { // 有序向量重复元素剔除算法(低效版)
-// 	int oldSize = _size;
-// 	int i = 1;										// 当前比对元素的秩，起始于首元素
-// 	while (i < _size)								// 从前向后，逐一比对各对相邻元素
-// 		_elem[i - 1] == _elem[1] ? remove(i) : i++; // 若雷同，则删除后者；否则转至后一元素
-// 	return oldSize - _size;							// 向量规模变化，即被删除元素总数
-// }
-
-// 2.19有序向量uniquify()接口的高效实现
 template <typename T>
 int Vector<T>::uniquify()
 {								   // 有序向量重复元素剔除算法(高效版)
@@ -264,7 +258,7 @@ int Vector<T>::uniquify()
 	return j - i; // 向量规模变化量，即被删除元素总数
 }
 
-// 2.20有序向量各种查找算法的统一search()接口
+// 有序向量各种查找算法的统一search()接口
 template <typename T>									   // 在有序向量的区间[hi,hi]内，确定不大于e的最后一个节点的秩
 Rank Vector<T>::search(T const &e, Rank lo, Rank hi) const // assert:0<=lo<hi<=_size
 {
@@ -273,69 +267,22 @@ Rank Vector<T>::search(T const &e, Rank lo, Rank hi) const // assert:0<=lo<hi<=_
 						: fibSearch(_elem, e, lo, hi); // 二分查找或Fibonacci查找
 }
 
-// 2.21二分查找算法(版本A)：在有序向量区间[lo,hi]内查找元素e，0<lo<=hi<+_size
-template <typename T>
-static Rank binSearch(T *A, T const &e, Rank lo, Rank hi)
-{
-	while (lo < hi) // 每步迭代可能要做两次判断，有三个分支
+
+ 二分查找算法):在有序向量区间[lo,hi]内查找元素e，0<lo<=hi<+_size
+ template <typename T>
+ static Rank binSearch(T *A, T const &e, Rank lo, Rank hi)
+ {
+	while (1 < hi - lo) // 每步迭代仅需做一次比较判断，有两个分支；成功查找不能提前终止
 	{
-		Rank mi = (lo + hi) >> 1; // 以中点为轴点
-		if (e < A[mi])
-			hi = mi; // 深入前半段[lo,mi]继续寻找
-		else if (A[mi] < e)
-			lo = mi + 1; // 深入后半段[mi,hi]继续查找
-		else
-			return mi; // 在mi处命中
-	} // 成功查找可以提前终止
-	return -1; // 查找失败
-} // 有多个元素命中时，不能保证返回秩最大者；查找失败时，简单地返回-1，而不能指示失败位置
+ 		Rank mi = (lo + hi) >> 1;		 // 以中点为轴点
+ 		(e < A[mi]) ? hi = mi : lo = mi; // 经比较后确定深入[lo,mi]或[mi,hi]
+ 	}
+ 	return (e == A[lo]) ? lo : -1; // 查找成功时返回对应的秩；否则统一返回-1
+ } // 有多个元素命中时，不能保证返回秩最大者；查找失败时，简单地返回-1，而不能指示失败位置
 
-// // 2.23二分查找算法(版本B):在有序向量区间[lo,hi]内查找元素e，0<lo<=hi<+_size
-// template <typename T>
-// static Rank binSearch(T *A, T const &e, Rank lo, Rank hi)
-// {
-// 	while (1 < hi - lo) // 每步迭代仅需做一次比较判断，有两个分支；成功查找不能提前终止
-// 	{
-// 		Rank mi = (lo + hi) >> 1;		 // 以中点为轴点
-// 		(e < A[mi]) ? hi = mi : lo = mi; // 经比较后确定深入[lo,mi]或[mi,hi]
-// 	}
-// 	return (e == A[lo]) ? lo : -1; // 查找成功时返回对应的秩；否则统一返回-1
-// } // 有多个元素命中时，不能保证返回秩最大者；查找失败时，简单地返回-1，而不能指示失败位置
 
-// // 2.24二分查找算法(版本C):在有序向量区间[lo,hi]内查找元素e，0<lo<=hi<+_size
-// template <typename T>
-// static Rank binSearch(T *A, T const &e, Rank lo, Rank hi)
-// {
-// 	while (lo < hi) // 每步迭代仅需做一次比较判断，有两个分支
-// 	{
-// 		Rank mi = (lo + hi) >> 1;			 // 以中点为轴点
-// 		(e < A[mi]) ? hi = mi : lo = mi + 1; // 经比较后确定深入[lo,mi]或[mi,hi]
-// 	} // 循环结束时，lo为大于e的元素的最小秩，故lo-1即不大于e的元素的最大秩
-// 	return --lo; // 有多个命中元素时，总能保证返回秩最大者；查找失败时，能够返回失败的位置
-// }
 
-// 2.22
-// #include "..\fibonacci\Fib.h"
-// template <typename T>
-// static Rank fibSearch(T *A, T const &e, Ranklo, Rank hi)
-// {
-// 	Fib fib(hi - lo);
-// 	while (lo < hi)
-// 	{
-// 		while (hi - lo < fib.get())
-// 			fib.prev();
-// 		Rank mi = lo + fib.get() - 1;
-// 		if (e < A[mi])
-// 			hi = mi;
-// 		else if (A[mi] < e)
-// 			lo = mi + 1;
-// 		else
-// 			return mi;
-// 	}
-// 	return -1;
-// }
-
-// 2.25向量排序器接口
+//向量排序器接口
 template <typename T>
 void Vector<T>::sort(Rank lo, Rank hi) // 向量区间[lo,hi]排序
 {
@@ -359,7 +306,7 @@ void Vector<T>::sort(Rank lo, Rank hi) // 向量区间[lo,hi]排序
 	}
 }
 
-// 2.26向量的起泡排序
+// 向量的起泡排序
 template <typename T>
 void Vector<T>::bubbleSort(Rank lo, Rank hi) // assert:0 <= lo < hi <= _szie
 {
@@ -367,7 +314,7 @@ void Vector<T>::bubbleSort(Rank lo, Rank hi) // assert:0 <= lo < hi <= _szie
 		; // 逐趟做扫描交换，直至全序
 }
 
-// 2.27单趟扫描转换
+//单趟扫描转换
 template <typename T>
 bool Vector<T>::bubble(Rank lo, Rank hi) // 一趟扫描交换
 {
@@ -381,28 +328,29 @@ bool Vector<T>::bubble(Rank lo, Rank hi) // 一趟扫描交换
 	return sorted; // 返回有序标志
 }
 
-// 2.28向量归并排序
 template <typename T>
-void Vector<T>::mergeSort(Rank lo, Rank hi)
-{ // 0 <= lo < hi <=_size
-	if (hi - lo < 2)
-		return;				 // 单元素区间自然有序，否则...
-	int mi = (lo + hi) >> 1; // 以中点为界
-	mergeSort(lo, mi);
-	mergeSort(mi, hi);
-	merge(lo, mi, hi); // 分别对前，后半段排序，然后归并
+void Vector<T>::mergeSort(Rank lo, Rank hi) //[lo,hi)
+{
+    if (hi - lo < 2)
+    {
+        return;
+    } // 递归到了最小单元
+    int mi = (hi + lo) >> 1; // 对分
+
+    mergeSort(lo, mi); //[lo,mi) 递归
+    mergeSort(mi, hi);
+    merge(lo, mi, hi); // 合并
 }
 
-// 2.29有序向量的二路归并
+// 有序向量的二路归并
 template <typename T>
 void Vector<T>::merge(Rank lo, Rank mi, Rank hi) {
     T* A = _elem + lo;
     int lb = mi - lo;
     T* B = new T[lb];
-    for (Rank i = 0; i < lb; i++) B[i] = A[i]; // 复制前子向量
-    
+    for (Rank i = 0; i < lb; i++) B[i] = A[i]; 
     int lc = hi - mi;
-    T* C = _elem + mi; // 后子向量C[0, lc)就地
+    T* C = _elem + mi; 
     
     for (Rank i = 0, j = 0, k = 0; j < lb; ) { // 归并：反复从B和C中取出更小者
         if (k >= lc || B[j] < C[k]) A[i++] = B[j++];
