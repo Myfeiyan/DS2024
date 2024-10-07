@@ -1,36 +1,48 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <ctime>
+#include <string>
+#include <iomanip> 
+#include <random> 
 #include <cmath>
 #include "vector.cpp"
 #include <chrono>
+
 using namespace std;
-// 复数类定义
+// 定义复数类
 class Complex
 {
 public:
     double real;
     double imag;
-    // 运算符重载
     Complex(double r = 0, double i = 0) : real(r), imag(i) {}
-    // 重载 <= 操作符
-    bool operator<=(const Complex &other) const
-    {return (real <= other.real && imag <= other.imag);}
-    // 重载 > 操作符
-    bool operator>(const Complex &other) const
-    {return (real > other.real || (real == other.real && imag > other.imag));}
-    double modulus() const
-    {return sqrt(real * real + imag * imag);}
-    // 定义小于运算符，用于比较复数模（顺序）
-    bool operator<(const Complex &other) const
-    {return modulus() < other.modulus() || (modulus() == other.modulus() && real < other.real);}
-    // 重载 != 运算符
-    bool operator!=(const Complex &other) const
-    {return (real != other.real || imag != other.imag);}
-    // 重载==
-    bool operator==(const Complex &other) const
-    {return real == other.real && imag == other.imag;}
-    friend ostream &operator<<(ostream &os, const Complex &c)
-    {os << "(" << c.real << ", " << c.imag << ")";return os;}
+
+ double modulus() const {
+        return std::sqrt(real * real + imag * imag);
+    }
+      bool operator<(const Complex& other) const {
+        if (std::abs(module - other.module) < 1e-9) {
+            return real < other.real || (std::abs(real - other.real) < 1e-9 && imag < other.imag);
+        }
+        return module < other.module;
+    }
+    bool operator>(const Complex& other) const {
+        if (this->module == other.module) {
+            return this->real > other.real;
+        }
+        return this->module > other.module;
+    }
+
+    bool operator!=(const Complex& other) const {
+        return this->real != other.real || this->imag != other.imag;
+    }
+
+    bool operator==(const Complex& other) const {
+        return this->real == other.real && this->imag == other.imag;
+    }
 };
+
 // 区间查找算法
 Vector<Complex> findM(const Vector<Complex> &arr, double m1, double m2)
 {
@@ -43,9 +55,12 @@ Vector<Complex> findM(const Vector<Complex> &arr, double m1, double m2)
     }
     return result;
 }
-// 输出函数
-void print(Complex &e)
-{ cout << e.real << "+" << e.imag << "i  ";}
+
+void print(Complex &c)   //输出函数
+{
+    cout<<c.real<<"+" << c.imag << "i   ";
+}
+
 // 随机生成乱序复数向量
 Vector<Complex> generateRandomVector(int n)
 {
@@ -55,8 +70,8 @@ Vector<Complex> generateRandomVector(int n)
     Vector<Complex> A1;
     for (int i = 0; i < uniqueSize; ++i)
     {
-        double real = rand() % 10; // 实部在 0 到 9 之间
-        double imag = rand() % 10; // 虚部在 0 到 9 之间
+         double real = (rand() % 200 - 100) / 10.0; // 实部在 -10 到 10 之间
+         double imag = (rand() % 200 - 100) / 10.0; // 虚部在 -10 到 10 之间
         A1.insert(Complex(real, imag));
         A.insert(Complex(real, imag)); // 插入到最终的向量中
     }
@@ -79,6 +94,7 @@ void measureSortingTime(const string &sortType, Vector<Complex> A)
     chrono::duration<double, micro> duration_us = end - start;
     cout << sortType<<" time: " << duration_us.count() << " us" << endl;
 }
+
 int main()
 {
     // 1. 生成一个无序的复数向量
@@ -88,13 +104,18 @@ int main()
     Vector<Complex> A2 = A;
     Vector<Complex> A3 = A; // 逆序数组A3
     A2.sort();//顺序数组A2
-    for (int i=n-1; i>=0; i--)
-    {
-        A3[n-i-1] = A2[i];
+    
+   std::vector<Complex> generateRandomComplexVector(int n) {
+    std::vector<Complex> vec;
+    srand((unsigned)time(0));  // 设置随机数种子
+    for (int i = 0; i < n; ++i) {
+        double real = (rand() % 200 - 100) / 10.0;  // 随机生成 -10 到 10 的实数
+        double imag = (rand() % 200 - 100) / 10.0;  // 随机生成 -10 到 10 的虚数
+        vec.emplace_back(real, imag);
     }
-    cout << "无序复数向量:\n";
-    A.traverse(print);
-    cout << endl;
+    return vec;
+}
+    
     // 测试置乱
     A.unsort(0, A.size()-1);
     cout << "置乱后的复数向量:\n";
@@ -143,5 +164,6 @@ int main()
     Vector<Complex> A32 = A3;
     measureSortingTime("起泡排序", A3);
     measureSortingTime("归并排序", A32);
+    
     return 0;
  }
