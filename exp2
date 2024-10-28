@@ -1,0 +1,253 @@
+1.
+#include <iostream>
+#include <stack>
+#include <string>
+#include <cmath>
+#include <sstream>
+#include <stdexcept>
+#include <cstdlib>  // 包含 strtod
+
+#define N_OPTR 13 // 运算符总数
+
+class Stack {
+private:
+    std::stack<double> data;
+public:
+    void push(double val) {
+        data.push(val);
+    }
+
+    double pop() {
+        if (data.empty()) {
+            throw std::runtime_error("Stack is empty");
+        }
+        double top = data.top();
+        data.pop();
+        return top;
+    }
+
+    bool isEmpty() const {
+        return data.empty();
+    }
+
+    double top() const {
+        if (data.empty()) {
+            throw std::runtime_error("Stack is empty");
+        }
+        return data.top();
+    }
+};
+
+typedef enum { 
+    ADD, SUB, MUL, DIV, POW, FAC, L_P, R_P, EOE, 
+    SIN, COS, TAN, LOG 
+} Operator; // 运算符集合
+
+const char pri[N_OPTR][N_OPTR] = {
+    /*              +      -      *      /      ^      !      (      )      \0     sin    cos    tan    log */
+    /* --  + */    '>',   '>',   '<',   '<',   '<',   '<',   '<',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* |   - */    '>',   '>',   '<',   '<',   '<',   '<',   '<',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* 栈  * */    '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* 顶  / */    '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* 运  ^ */    '>',   '>',   '>',   '>',   '>',   '<',   '<',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* 算  ! */    '>',   '>',   '>',   '>',   '>',   '>',   ' ',   '>',   '>',   '<',   '<',   '<',   '<',
+    /* 符  ( */    '<',   '<',   '<',   '<',   '<',   '<',   '<',   '~',   ' ',   '<',   '<',   '<',   '<',
+    /* |   ) */    ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',   ' ',
+    /* -- \0 */    '<',   '<',   '<',   '<',   '<',   '<',   '<',   ' ',   '~',   '<',   '<',   '<',   '<',
+    /* sin */      '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '>',   '>',   '>',   '>',
+    /* cos */      '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '>',   '>',   '>',   '>',
+    /* tan */      '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '>',   '>',   '>',   '>',
+    /* log */      '>',   '>',   '>',   '>',   '<',   '<',   '<',   '>',   '>',   '>',   '>',   '>',   '>'
+};
+
+double calc(double op1, double op2, Operator op) {
+    switch (op) {
+        case ADD: return op1 + op2;
+        case SUB: return op1 - op2;
+        case MUL: return op1 * op2;
+        case DIV: return op1 / op2;
+        case POW: return pow(op1, op2);
+        case SIN: return sin(op1);
+        case COS: return cos(op1);
+        case TAN: return tan(op1);
+        case LOG: return log(op1);
+        default: throw std::runtime_error("Invalid operator");
+    }
+}
+
+Operator strToOp(const std::string& s) {
+    if (s == "+") return ADD;
+    if (s == "-") return SUB;
+    if (s == "*") return MUL;
+    if (s == "/") return DIV;
+    if (s == "^") return POW;
+    if (s == "!") return FAC;
+    if (s == "(") return L_P;
+    if (s == ")") return R_P;
+    if (s == "EOE") return EOE;
+    if (s == "sin") return SIN;
+    if (s == "cos") return COS;
+    if (s == "tan") return TAN;
+    if (s == "log") return LOG;
+    throw std::runtime_error("Unknown operator");
+}
+
+bool isNumber(const std::string& token) {
+    if (token.empty()) return false;
+    char* end;
+    double value = strtod(token.c_str(), &end);
+    return *end == '\0';
+}
+
+double evaluateExpression(const std::string& expr) {
+    Stack numStack;
+    std::stack<Operator> opStack;
+    std::istringstream iss(expr);
+    std::string token;
+
+    while (iss >> token || !opStack.empty()) {
+        if (isNumber(token)) {
+            numStack.push(strtod(token.c_str(), NULL)); // 使用strtod将字符串转换为双精度浮点数
+        } else {
+            Operator op = strToOp(token);
+            while (!opStack.empty() && pri[opStack.top()][op] != '<') {
+                if (opStack.top() == FAC) {
+                    double operand = numStack.pop();
+                    numStack.push(tgamma(operand + 1)); // 使用tgamma(n+1)计算n!
+                    opStack.pop();
+                } else if (opStack.top() == SIN || opStack.top() == COS || opStack.top() == TAN || opStack.top() == LOG) {
+                    double operand = numStack.pop();
+                    numStack.push(calc(operand, 0, opStack.top()));
+                    opStack.pop();
+                } else {
+                    double op2 = numStack.pop();
+                    double op1 = numStack.pop();
+                    numStack.push(calc(op1, op2, opStack.top()));
+                    opStack.pop();
+                }
+            }
+            if (token == "EOE" && opStack.empty()) break;
+            opStack.push(op);
+        }
+    }
+    return numStack.pop();
+}
+
+int main() {
+    try {
+        std::cout << evaluateExpression("3 + 5 * 2") << std::endl; // 应该输出 13
+        std::cout << evaluateExpression("4 * (3 + 2)") << std::endl; // 应该输出 20
+        std::cout << evaluateExpression("5!") << std::endl; // 应该输出 120
+        std::cout << evaluateExpression("sin(0.5)") << std::endl; // 应该输出 sin(0.5)
+        std::cout << evaluateExpression("cos(0.5)") << std::endl; // 应该输出 cos(0.5)
+        std::cout << evaluateExpression("tan(0.5)") << std::endl; // 应该输出 tan(0.5)
+        std::cout << evaluateExpression("log(10)") << std::endl; // 应该输出 log(10)
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return 0;
+}
+
+
+2.
+(1)
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+
+// 计算柱状图中能够勾勒出来的矩形的最大面积
+int largestRectangleArea(const std::vector<int>& heights) {
+    int n = heights.size();
+    if (n == 0) return 0;
+
+    std::stack<int> st; // 存储柱子的索引
+    int maxArea = 0;
+
+    for (int i = 0; i <= n; ++i) {
+        // 当前高度小于栈顶柱子的高度，或已经遍历到最后一个柱子
+        while (!st.empty() && (i == n || heights[st.top()] >= heights[i])) {
+            int height = heights[st.top()];
+            st.pop();
+            int width;
+            if (st.empty()) {
+                width = i; // 如果栈为空，宽度为 i
+            } else {
+                width = i - st.top() - 1; // 宽度为当前索引减去栈顶索引再减一
+            }
+            maxArea = std::max(maxArea, height * width);
+        }
+        st.push(i); // 将当前索引压入栈中
+    }
+
+    return maxArea;
+}
+
+int main() {
+    std::vector<int> heights = {2, 1, 5, 6, 2, 3};
+    int maxArea = largestRectangleArea(heights);
+    std::cout << "The largest rectangle area is: " << maxArea << std::endl;
+    return 0;
+}
+(2)
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <algorithm>
+#include <random>
+#include <ctime>
+
+// 计算柱状图中能够勾勒出来的矩形的最大面积
+int largestRectangleArea(const std::vector<int>& heights) {
+    int n = heights.size();
+    if (n == 0) return 0;
+
+    std::stack<int> st; // 存储柱子的索引
+    int maxArea = 0;
+
+    for (int i = 0; i <= n; ++i) {
+        // 当前高度小于栈顶柱子的高度，或已经遍历到最后一个柱子
+        while (!st.empty() && (i == n || heights[st.top()] >= heights[i])) {
+            int height = heights[st.top()];
+            st.pop();
+            int width;
+            if (st.empty()) {
+                width = i; // 如果栈为空，宽度为 i
+            } else {
+                width = i - st.top() - 1; // 宽度为当前索引减去栈顶索引再减一
+            }
+            maxArea = std::max(maxArea, height * width);
+        }
+        st.push(i); // 将当前索引压入栈中
+    }
+
+    return maxArea;
+}
+
+// 生成随机数据
+std::vector<int> generateRandomHeights(int length) {
+    std::vector<int> heights(length);
+    std::mt19937 gen(std::time(0)); // 使用当前时间作为随机数生成器的种子
+    std::uniform_int_distribution<> dis(0, 10000); // 生成 0 到 10000 之间的随机数
+
+    for (int i = 0; i < length; ++i) {
+        heights[i] = dis(gen);
+    }
+
+    return heights;
+}
+
+int main() {
+    std::srand(std::time(0)); // 初始化随机数生成器
+
+    for (int i = 0; i < 10; ++i) {
+        int length = std::rand() % 100000 + 1; // 生成 1 到 100000 之间的随机长度
+        std::vector<int> heights = generateRandomHeights(length);
+
+        int maxArea = largestRectangleArea(heights);
+        std::cout << "Test Case " << i + 1 << ": Length = " << length << ", Max Area = " << maxArea << std::endl;
+    }
+
+    return 0;
+}
