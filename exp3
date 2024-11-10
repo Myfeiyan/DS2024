@@ -1,0 +1,151 @@
+#include <iostream>
+#include <unordered_map>
+#include <queue>
+#include <vector>
+#include <string>
+#include <memory>
+
+// 二叉树节点定义
+template <typename T>
+class BinTree {
+public:
+    T data;
+    int frequency;
+    std::shared_ptr<BinTree> left;
+    std::shared_ptr<BinTree> right;
+
+    BinTree(T data, int frequency) : data(data), frequency(frequency), left(nullptr), right(nullptr) {}
+};
+
+// 位图类 Bitmap，用于存储 Huffman 编码
+class Bitmap {
+private:
+    std::vector<bool> bits;
+
+public:
+    void set(int k) {
+        if (k >= bits.size()) bits.resize(k + 1);
+        bits[k] = true;
+    }
+
+    void clear(int k) {
+        if (k >= bits.size()) bits.resize(k + 1);
+        bits[k] = false;
+    }
+
+    bool test(int k) const {
+        return k < bits.size() && bits[k];
+    }
+
+    std::string to_string(int n) const {
+        std::string s;
+        for (int i = 0; i < n && i < bits.size(); i++) {
+            s += bits[i] ? '1' : '0';
+        }
+        return s;
+    }
+
+    int size() const { return static_cast<int>(bits.size()); }
+};
+
+// Huffman 树的构建类
+class HuffTree {
+private:
+    std::shared_ptr<BinTree<char>> root;
+
+public:
+    HuffTree(const std::unordered_map<char, int>& freq) {
+        // 使用优先队列构建 Huffman 树
+        auto cmp = [](std::shared_ptr<BinTree<char>> a, std::shared_ptr<BinTree<char>> b) { return a->frequency > b->frequency; };
+        std::priority_queue<std::shared_ptr<BinTree<char>>, std::vector<std::shared_ptr<BinTree<char>>>, decltype(cmp)> pq(cmp);
+
+        // 把每个字母和频率作为叶子节点加入队列
+        for (const auto& pair : freq) {
+            char ch = pair.first;
+            int frequency = pair.second;
+            pq.push(std::make_shared<BinTree<char>>(ch, frequency));
+        }
+
+        while (pq.size() > 1) {
+            auto left = pq.top(); pq.pop();
+            auto right = pq.top(); pq.pop();
+
+            auto parent = std::make_shared<BinTree<char>>('\0', left->frequency + right->frequency);
+            parent->left = left;
+            parent->right = right;
+            pq.push(parent);
+        }
+
+        root = pq.top();
+    }
+
+    std::shared_ptr<BinTree<char>> getRoot() const { return root; }
+};
+
+// 生成 Huffman 编码，并使用 Bitmap 存储
+void generateHuffCode(std::shared_ptr<BinTree<char>> node, Bitmap& code, int depth, std::unordered_map<char, Bitmap>& huffCodes) {
+    if (!node) return;
+
+    // 如果是叶节点，则将编码存储
+    if (!node->left && !node->right) {
+        Bitmap codeCopy = code;
+        huffCodes[node->data] = codeCopy;
+        return;
+    }
+
+    // 左子树编码加 '0'
+    code.clear(depth);
+    generateHuffCode(node->left, code, depth + 1, huffCodes);
+
+    // 右子树编码加 '1'
+    code.set(depth);
+    generateHuffCode(node->right, code, depth + 1, huffCodes);
+}
+
+// 构建 Huffman 编码表
+std::unordered_map<char, Bitmap> buildHuffmanCoding(const std::unordered_map<char, int>& freq) {
+    HuffTree huffTree(freq);
+    std::unordered_map<char, Bitmap> huffCodes;
+    Bitmap code;
+    generateHuffCode(huffTree.getRoot(), code, 0, huffCodes);
+    return huffCodes;
+}
+
+// 对单词进行 Huffman 编码
+void encodeWord(const std::string& word, const std::unordered_map<char, Bitmap>& huffCodes) {
+    for (char ch : word) {
+        if (huffCodes.count(ch)) {
+            std::cout << huffCodes.at(ch).to_string(huffCodes.at(ch).size()) << " "; // 输出编码
+        }
+        else {
+            std::cout << "[NA] "; // 如果没有编码则输出 NA
+        }
+    }
+    std::cout << std::endl;
+}
+
+int main() {
+    // 使用示例中的字符频率表
+    std::unordered_map<char, int> freq = {
+        {'a', 8}, {'b', 3}, {'c', 1}, {'d', 2}, {'e', 5}, {'f', 1},
+        {'g', 1}, {'h', 2}, {'i', 4}, {'j', 1}, {'k', 1}, {'l', 2},
+        {'m', 3}, {'n', 2}, {'o', 6}, {'p', 1}, {'q', 1}, {'r', 2},
+        {'s', 1}, {'t', 2}, {'u', 2}, {'v', 1}, {'w', 1}, {'x', 1},
+        {'y', 1}, {'z', 1}
+    };
+
+    // 构建 Huffman 编码表
+    auto huffCodes = buildHuffmanCoding(freq);
+
+    // 编码并输出 "dream" 和其他单词
+    std::cout << "Encoding for 'dream': ";
+    encodeWord("dream", huffCodes);
+
+    std::cout << "Encoding for 'have': ";
+    encodeWord("have", huffCodes);
+
+    std::cout << "Encoding for 'ai': ";
+    encodeWord("ai", huffCodes);
+
+    return 0;
+}
